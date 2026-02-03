@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mastering CI/CD | Professional Matte Dark Guide</title>
+    <style>
+        :root {
+            --bg: #121212;
+            --surface: #1e1e1e;
+            --surface-light: #252525;
+            --primary: #bb86fc; /* Matte Purple */
+            --secondary: #03dac6; /* Matte Teal */
+            --error: #cf6679;
+            --text-high: #ffffff;
+            --text-med: #b0b0b0;
+            --border: #333333;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            background-color: var(--bg); 
+            color: var(--text-med); 
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container { max-width: 1100px; margin: 0 auto; }
+
+        /* Typography */
+        h1, h2, h3 { color: var(--text-high); margin-bottom: 1rem; }
+        b { color: var(--primary); }
+
+        /* Sections */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        /* The YAML Explainer Table */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .yaml-box {
+            background: #000;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            color: var(--secondary);
+            border-left: 4px solid var(--primary);
+        }
+
+        /* Pipeline Visualizer */
+        .pipeline-nav {
+            display: flex;
+            justify-content: space-between;
+            margin: 40px 0;
+            position: relative;
+            background: var(--surface-light);
+            padding: 15px;
+            border-radius: 50px;
+        }
+
+        .nav-item {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 30px;
+            transition: 0.3s;
+            font-weight: bold;
+            font-size: 0.9rem;
+            z-index: 5;
+        }
+
+        .nav-item.active {
+            background: var(--primary);
+            color: var(--bg);
+        }
+
+        /* Demo Website UI - Consistent Component */
+        .demo-window {
+            background: #ffffff;
+            border-radius: 8px 8px 0 0;
+            overflow: hidden;
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+            color: #333;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .browser-bar {
+            background: #e0e0e0;
+            padding: 10px;
+            display: flex;
+            gap: 5px;
+        }
+
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: #bbb; }
+        
+        .web-content { padding: 20px; text-align: center; height: 220px;}
+        .web-nav { display: flex; justify-content: space-around; padding: 10px; border-bottom: 1px solid #eee; font-size: 12px;}
+        .hero-btn { 
+            background: #6200ee; color: white; border: none; 
+            padding: 10px 20px; border-radius: 4px; margin-top: 20px; 
+        }
+
+        /* States of the Demo App */
+        .state-build { filter: grayscale(1) blur(1px); opacity: 0.5; }
+        .state-test { border: 2px dashed orange; }
+        .state-production { box-shadow: 0 0 20px rgba(3, 218, 198, 0.4); }
+
+        /* Logic Splitter */
+        .demo-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            align-items: start;
+        }
+
+        .log-terminal {
+            background: #000;
+            color: #00ff41;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #444;
+        }
+
+        .stage-pane { display: none; animation: slideUp 0.4s ease; }
+        .stage-pane.active { display: block; }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Mobile Fix */
+        @media (max-width: 850px) {
+            .demo-layout { grid-template-columns: 1fr; }
+            .pipeline-nav { flex-direction: column; border-radius: 10px; }
+            .nav-item { border-radius: 5px; margin: 2px 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header style="text-align: center; padding: 50px 0;">
+        <h1>The Non-Technical Guide to CI/CD</h1>
+        <p style="max-width: 700px; margin: 0 auto;">Think of a CI/CD pipeline as an <b>automated quality filter</b>. It ensures that when a developer changes a button's color, the whole website doesn't explode for the customers.</p>
+    </header>
+
+    <section class="card">
+        <h3>1. The Core Concepts</h3>
+        <div class="info-grid">
+            <div>
+                <h4>What is CI? (Continuous Integration)</h4>
+                <p>Developers "Merge" their code into one shared place (GitHub) many times a day. The system automatically builds it to check for errors immediately.</p>
+            </div>
+            <div>
+                <h4>What is CD? (Continuous Deployment)</h4>
+                <p>Once the code is proven safe, the system automatically "Deploys" (pushes) it to the live server so users see the update without a human clicking "upload".</p>
+            </div>
+        </div>
+
+        <div class="info-grid" style="margin-top: 30px;">
+            <div class="yaml-box">
+                # Example .YAML file (The Script)<br>
+                <b>name:</b> My_Pipeline<br>
+                <b>on:</b> [push]<br>
+                <b>jobs:</b><br>
+                &nbsp;&nbsp;<b>build:</b> run npm install<br>
+                &nbsp;&nbsp;<b>test:</b> run security_check<br>
+                &nbsp;&nbsp;<b>deploy:</b> push to cloud
+            </div>
+            <div>
+                <h4>The Tools of the Trade</h4>
+                <p><b>GitHub Actions / Jenkins:</b> These are the "Engine Rooms". They read the YAML file (the instructions) and execute the work on powerful remote computers.</p>
+                <p><b>YAML File:</b> This is a simple text file that tells the Engine Room exactly which commands to run and in what order.</p>
+            </div>
+        </div>
+    </section>
+
+    <hr style="border: 0; border-top: 1px solid var(--border); margin: 50px 0;">
+
+    <h2>2. Live Pipeline Simulator</h2>
+    <p>Click the stages below to see how our <b>Coffee Shop App</b> moves through the pipeline.</p>
+    
+    <div class="pipeline-nav">
+        <div class="nav-item active" onclick="showStage(1, this)">1. BUILD</div>
+        <div class="nav-item" onclick="showStage(2, this)">2. TEST</div>
+        <div class="nav-item" onclick="showStage(3, this)">3. RELEASE</div>
+        <div class="nav-item" onclick="showStage(4, this)">4. PRODUCTION</div>
+    </div>
+
+    <div id="stage1" class="stage-pane active">
+        <div class="demo-layout">
+            <div>
+                <h3>🏗️ The Build Stage</h3>
+                <p>The developer just finished writing code for a new "Order" button. The system is now gathering all the pieces to see if they fit together.</p>
+                <ul>
+                    <li><b>Action:</b> Installing libraries and checking syntax.</li>
+                    <li><b>Status:</b> The website doesn't "exist" as a URL yet; it's just raw files being processed.</li>
+                </ul>
+            </div>
+            <div class="visuals">
+                <div class="demo-window state-build">
+                    <div class="browser-bar"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+                    <div class="web-nav"><span>Home</span><span>Menu</span><span>Contact</span></div>
+                    <div class="web-content">
+                        <h2>Fresh Coffee</h2>
+                        <button class="hero-btn">Order Now</button>
+                    </div>
+                </div>
+                <div class="log-terminal" style="margin-top: 20px;">
+                    [System] Initializing GitHub Actions...<br>
+                    [System] Using ubuntu-latest environment...<br>
+                    [Build] Fetching code from 'main' branch...<br>
+                    [Build] Installing 452 dependencies...<br>
+                    [Build] Success: Code compiled into executable bundle.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="stage2" class="stage-pane">
+        <div class="demo-layout">
+            <div>
+                <h3>🧪 The Test Stage</h3>
+                <p>Now that the app is built, we run <b>Automated Tests</b>. Robots simulate a user clicking the "Order" button to see if it actually works.</p>
+                <ul>
+                    <li><b>Unit Test:</b> Does 1 + 1 = 2 in the code?</li>
+                    <li><b>UI Test:</b> Is the button visible and clickable?</li>
+                </ul>
+            </div>
+            <div class="visuals">
+                <div class="demo-window state-test">
+                    <div class="browser-bar"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+                    <div class="web-nav"><span>Home</span><span>Menu</span><span>Contact</span></div>
+                    <div class="web-content">
+                        <h2 style="color: orange;">Testing Mode...</h2>
+                        <button class="hero-btn" style="border: 2px solid red;">Order Now</button>
+                        <p style="font-size: 10px;">(Robot is clicking this button 100 times...)</p>
+                    </div>
+                </div>
+                <div class="log-terminal" style="margin-top: 20px;">
+                    [Test] Starting Test Suite v1.2...<br>
+                    [Test] Check: Header Loads... PASS<br>
+                    [Test] Check: Button Response... PASS<br>
+                    [Test] Check: Mobile Scaling... PASS<br>
+                    [Result] 148 Tests Passed. 0 Failed.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="stage3" class="stage-pane">
+        <div class="demo-layout">
+            <div>
+                <h3>📦 The Release Stage</h3>
+                <p>The code is safe. Now we wrap it in a "Docker Container". This is like a virtual box that contains the website and everything it needs to run on any computer in the world.</p>
+                <ul>
+                    <li><b>Outcome:</b> An "Artifact" (a zip or image) is created.</li>
+                    <li><b>Manual Check:</b> Sometimes a human (QA) looks at it here first.</li>
+                </ul>
+            </div>
+            <div class="visuals" style="text-align: center;">
+                <div style="font-size: 80px;">📦</div>
+                <p><b>coffee-app-v2.1.0.img</b></p>
+                <div class="log-terminal" style="margin-top: 20px; text-align: left;">
+                    [Release] Creating production image...<br>
+                    [Release] Compression 88%...<br>
+                    [Release] Uploading to Docker Hub...<br>
+                    [Release] Artifact stored: ID_99821<br>
+                    [Ready] Waiting for deployment trigger.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="stage4" class="stage-pane">
+        <div class="demo-layout">
+            <div>
+                <h3>🚀 The Production Stage</h3>
+                <p>The box is opened on the live server. Millions of people can now access the new <b>Order Now</b> button on their phones and computers.</p>
+                <ul>
+                    <li><b>Continuous Deployment:</b> The transition was so fast the user didn't even notice.</li>
+                    <li><b>Success:</b> The pipeline is complete!</li>
+                </ul>
+            </div>
+            <div class="visuals">
+                <div class="demo-window state-production">
+                    <div class="browser-bar" style="background: #03dac6;"><div class="dot"></div><div class="dot" style="background:white"></div><div class="dot"></div></div>
+                    <div class="web-nav"><span>Home</span><span>Menu</span><span>Contact</span></div>
+                    <div class="web-content">
+                        <h2>Order Your Coffee!</h2>
+                        <p>Enjoy our new streamlined checkout.</p>
+                        <button class="hero-btn" style="background: #03dac6; color: #000;">Order Now</button>
+                    </div>
+                </div>
+                <div class="log-terminal" style="margin-top: 20px;">
+                    [Deploy] Connecting to AWS Cloud...<br>
+                    [Deploy] Switching traffic to New Build...<br>
+                    [Monitoring] Server CPU: 12%<br>
+                    [Monitoring] Active Users: 14,021<br>
+                    [Status] <span style="color: #03dac6;">LIVE & HEALTHY</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    function showStage(stageNum, element) {
+        // Update Nav UI
+        document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+        element.classList.add('active');
+
+        // Update Content UI
+        document.querySelectorAll('.stage-pane').forEach(pane => pane.classList.remove('active'));
+        document.getElementById('stage' + stageNum).classList.add('active');
+    }
+</script>
+
+</body>
+</html>
