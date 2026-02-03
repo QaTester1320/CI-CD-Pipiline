@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CI/CD Hands-On Lab | Matte Dark Edition</title>
+    <style>
+        :root {
+            --bg: #121212;
+            --surface: #1e1e1e;
+            --primary: #bb86fc;
+            --secondary: #03dac6;
+            --error: #cf6679;
+            --text: #e0e0e0;
+            --border: #333;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Fira Code', monospace; }
+        body { background: var(--bg); color: var(--text); padding: 20px; line-height: 1.6; }
+
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        /* THE EDUCATIONAL SECTION */
+        .edu-box { background: var(--surface); border-radius: 12px; padding: 30px; margin-bottom: 30px; border: 1px solid var(--border); }
+        .edu-box h2 { color: var(--primary); margin-bottom: 15px; }
+        .flex-info { display: flex; gap: 20px; flex-wrap: wrap; }
+        .info-card { flex: 1; min-width: 300px; background: #252525; padding: 20px; border-radius: 8px; border-left: 4px solid var(--secondary); }
+
+        /* PIPELINE GRID (THM STYLE) */
+        .lab-grid { display: grid; grid-template-columns: 350px 1fr 400px; gap: 20px; height: 700px; }
+
+        /* COLUMN 1: INSTRUCTIONS */
+        .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
+        .panel-header { background: #2a2a2a; padding: 15px; font-weight: bold; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; }
+        .content { padding: 20px; overflow-y: auto; flex: 1; }
+
+        /* COLUMN 2: THE EVOLVING WEBSITE */
+        .app-preview { position: relative; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 2px solid var(--border); border-radius: 12px; }
+        .browser-window { width: 90%; height: 80%; background: #fff; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; color: #333; transition: all 0.5s ease; }
+        
+        /* Browser UI */
+        .browser-tab { background: #ddd; padding: 10px; display: flex; gap: 10px; font-size: 12px; }
+        .browser-page { flex: 1; padding: 20px; position: relative; }
+        .btn-shop { background: var(--primary); color: white; border: none; padding: 10px; border-radius: 4px; margin-top: 10px; cursor: pointer; }
+        .checkout-area { margin-top: 20px; padding-top: 10px; border-top: 1px dashed #ccc; }
+
+        /* STATE OVERLAYS */
+        .state-label { position: absolute; top: 10px; right: 10px; background: var(--primary); color: #000; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 12px; }
+        
+        /* THE GHOST BUILD STATE */
+        .build-mode { opacity: 0.3; filter: grayscale(1); }
+        .build-lines { position: absolute; width: 100%; height: 100%; background: repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(187,134,252,0.1) 1px, rgba(187,134,252,0.1) 2px); pointer-events: none; }
+
+        /* COLUMN 3: TERMINAL */
+        .terminal-container { background: #000; display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+        .terminal-output { flex: 1; padding: 15px; font-size: 13px; color: #00ff41; overflow-y: auto; }
+        .terminal-input-area { display: flex; background: #111; padding: 10px; border-top: 1px solid var(--border); }
+        .terminal-input-area span { color: var(--secondary); margin-right: 10px; }
+        .terminal-input-area input { background: transparent; border: none; color: #fff; flex: 1; outline: none; font-family: inherit; }
+
+        /* HELPERS */
+        .success-msg { color: var(--secondary); font-weight: bold; margin-top: 10px; display: none; }
+        .step-locked { color: #666; font-style: italic; }
+        .active-step { border: 1px solid var(--primary); padding: 10px; border-radius: 5px; margin-bottom: 10px; }
+
+        @media (max-width: 1100px) { .lab-grid { grid-template-columns: 1fr; height: auto; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="edu-box">
+        <h2>Phase 0: The Developer's Journey (From Localhost to GitHub)</h2>
+        <div class="flex-info">
+            <div class="info-card">
+                <h3>🏠 1. Localhost</h3>
+                <p>Your computer. You write code for the <b>Home</b> and <b>Checkout</b> pages here. It works for you, but the world can't see it yet.</p>
+            </div>
+            <div class="info-card">
+                <h3>🌳 2. Branching (Git)</h3>
+                <p>Developers use a <b>Feature Branch</b> to work on new things (like a "Pay" button) without breaking the <b>Main Branch</b> (which is the live site).</p>
+            </div>
+            <div class="info-card">
+                <h3>🤝 3. The Merge</h3>
+                <p>Once you are happy, you "Merge" your code into the <b>Main Branch</b> on GitHub. This is the <u>trigger</u> for the CI/CD Pipeline.</p>
+            </div>
+        </div>
+    </div>
+
+    
+
+    <div class="lab-grid">
+        <div class="panel">
+            <div class="panel-header"><span>LAB TASKS</span><span id="progress">Step 1/4</span></div>
+            <div class="content" id="instructions">
+                <div class="active-step">
+                    <h4>Task 1: Build & Compile</h4>
+                    <p>Your code is now on GitHub. We need the "Robot" to compile the Home and Checkout pages into a bundle.</p>
+                    <p style="font-size: 12px; margin-top: 10px;">Type these commands in the terminal:</p>
+                    <code style="color:var(--secondary)">git checkout main</code><br>
+                    <code style="color:var(--secondary)">npm run build</code>
+                </div>
+                <p class="step-locked">Next: Test Coverage...</p>
+            </div>
+        </div>
+
+        <div class="app-preview" id="app-area">
+            <div class="state-label" id="current-state">STATE: LOCALHOST</div>
+            <div class="browser-window build-mode" id="browser">
+                <div class="browser-tab">🔘 CoffeeShop.com - <span id="page-name">Home</span></div>
+                <div class="browser-page" id="page-content">
+                    <div id="home-view">
+                        <h3>Premium Coffee Shop</h3>
+                        <p>Loading items from code bundle...</p>
+                        <div style="background:#f0f0f0; height:60px; margin:10px 0; border-radius:4px;"></div>
+                        <button class="btn-shop">Add to Cart</button>
+                    </div>
+                    <div id="checkout-view" style="display:none;">
+                        <h3>Checkout</h3>
+                        <p>Total: $12.00</p>
+                        <div class="success-msg" id="success">✓ PAYMENT SUCCESSFUL</div>
+                    </div>
+                </div>
+                <div class="build-lines" id="visual-effect"></div>
+            </div>
+            <div style="margin-top: 20px;">
+                <button onclick="switchTab('home')" style="padding:5px; font-size:10px;">View Home</button>
+                <button onclick="switchTab('checkout')" style="padding:5px; font-size:10px;">View Checkout</button>
+            </div>
+        </div>
+
+        <div class="terminal-container">
+            <div class="panel-header">TERMINAL - jenkins@runner-1</div>
+            <div class="terminal-output" id="output">
+                [SYSTEM]: Pipeline initialized.<br>
+                [SYSTEM]: Connected to GitHub Repository: 'coffee-shop-v2'<br>
+                [SYSTEM]: Waiting for developer commands...<br><br>
+                Type 'help' for instructions.
+            </div>
+            <div class="terminal-input-area">
+                <span>$</span>
+                <input type="text" id="terminal-input" placeholder="Type command here..." autofocus autocomplete="off">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const input = document.getElementById('terminal-input');
+    const output = document.getElementById('output');
+    const browser = document.getElementById('browser');
+    const stateLabel = document.getElementById('current-state');
+    const instructions = document.getElementById('instructions');
+    const effect = document.getElementById('visual-effect');
+
+    let stage = 1;
+    let buildDone = false;
+    let testDone = false;
+    let releaseDone = false;
+
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            const cmd = input.value.toLowerCase().trim();
+            handleCommand(cmd);
+            input.value = '';
+        }
+    });
+
+    function log(text, color = '#00ff41') {
+        const div = document.createElement('div');
+        div.style.color = color;
+        div.innerHTML = `> ${text}`;
+        output.appendChild(div);
+        output.scrollTop = output.scrollHeight;
+    }
+
+    function switchTab(tab) {
+        document.getElementById('home-view').style.display = tab === 'home' ? 'block' : 'none';
+        document.getElementById('checkout-view').style.display = tab === 'checkout' ? 'block' : 'none';
+        document.getElementById('page-name').innerText = tab.charAt(0).toUpperCase() + tab.slice(1);
+    }
+
+    function handleCommand(cmd) {
+        log(cmd, '#fff');
+
+        if (cmd === 'help') {
+            log('Current Stage Commands: ' + (stage === 1 ? 'git checkout main, npm run build' : 'npm test, docker build, etc.'));
+            return;
+        }
+
+        // STAGE 1: BUILD
+        if (stage === 1) {
+            if (cmd === 'git checkout main') {
+                log('Switched to branch [main]. Pulling latest code...');
+            } else if (cmd === 'npm run build') {
+                log('Bundling Home Page assets...');
+                log('Bundling Checkout logic...');
+                setTimeout(() => {
+                    log('Build Finished: /dist/index.html created.', 'var(--secondary)');
+                    browser.classList.remove('build-mode');
+                    stateLabel.innerText = 'STATE: BUILT';
+                    stateLabel.style.background = '#888';
+                    stage = 2;
+                    updateInstructions();
+                }, 1000);
+            } else { log('Unknown command for Build stage.', 'var(--error)'); }
+        }
+
+        // STAGE 2: TEST
+        else if (stage === 2) {
+            if (cmd === 'npm test') {
+                log('Launching Headless Chrome...');
+                effect.className = 'test-scanner';
+                log('Running Unit Test: Price Calculation... PASS');
+                log('Running UI Test: Checkout Success Message... PASS');
+                setTimeout(() => {
+                    log('Test Coverage: 100%. Ready for Release.', 'var(--secondary)');
+                    stateLabel.innerText = 'STATE: TESTED';
+                    stateLabel.style.background = 'orange';
+                    stage = 3;
+                    updateInstructions();
+                }, 1500);
+            } else { log('Type "npm test" to verify the pages.', 'var(--error)'); }
+        }
+
+        // STAGE 3: RELEASE
+        else if (stage === 3) {
+            if (cmd === 'docker build -t coffee:v1 .') {
+                log('Creating Container Image...');
+                log('Adding Home.html to container...');
+                log('Adding Checkout.html to container...');
+                setTimeout(() => {
+                    log('Image coffee:v1 pushed to Docker Hub.', 'var(--secondary)');
+                    stateLabel.innerText = 'STATE: RELEASED';
+                    stateLabel.style.background = 'blue';
+                    stage = 4;
+                    updateInstructions();
+                }, 1500);
+            } else { log('Type "docker build -t coffee:v1 ." to package the app.', 'var(--error)'); }
+        }
+
+        // STAGE 4: PRODUCTION
+        else if (stage === 4) {
+            if (cmd === 'git push production main' || cmd === 'deploy') {
+                log('Connecting to Live Server...');
+                log('Updating Home Page content...');
+                log('Updating Checkout Page content...');
+                setTimeout(() => {
+                    log('LIVE DEPLOYMENT SUCCESSFUL!', 'var(--secondary)');
+                    stateLabel.innerText = 'STATE: PRODUCTION (LIVE)';
+                    stateLabel.style.background = 'var(--secondary)';
+                    browser.style.border = '4px solid var(--secondary)';
+                    document.getElementById('success').style.display = 'block';
+                    instructions.innerHTML = '<h3>CONGRATULATIONS!</h3><p>You have moved code from localhost to a live server using a CI/CD pipeline.</p>';
+                }, 1500);
+            } else { log('Type "deploy" to go live.', 'var(--error)'); }
+        }
+    }
+
+    function updateInstructions() {
+        if (stage === 2) {
+            instructions.innerHTML = `<div class="active-step"><h4>Task 2: Testing</h4><p>We must ensure the "Pay Now" button on the Checkout page actually works.</p><code>npm test</code></div>`;
+        } else if (stage === 3) {
+            instructions.innerHTML = `<div class="active-step"><h4>Task 3: Release (Docker)</h4><p>We will package the Home and Checkout pages into a "Docker Container" so it never changes.</p><code>docker build -t coffee:v1 .</code></div>`;
+        } else if (stage === 4) {
+            instructions.innerHTML = `<div class="active-step"><h4>Task 4: Production</h4><p>Time to show the world. Push the container to the live server.</p><code>deploy</code></div>`;
+        }
+        document.getElementById('progress').innerText = `Step ${stage}/4`;
+    }
+</script>
+
+</body>
+</html>
