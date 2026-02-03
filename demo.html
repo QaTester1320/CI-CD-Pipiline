@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate CI/CD Learning Hub</title>
+    <style>
+        :root {
+            --bg: #121212;
+            --surface: #1e1e1e;
+            --surface-light: #252525;
+            --primary: #bb86fc; /* Matte Purple */
+            --secondary: #03dac6; /* Matte Teal */
+            --error: #cf6679; /* Matte Red/Pink */
+            --text-high: #ffffff;
+            --text-med: #b0b0b0;
+            --border: #333333;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            background-color: var(--bg); 
+            color: var(--text-med); 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            padding: 10px;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+
+        /* HEADER & KNOWLEDGE BASE */
+        .hero-section { text-align: center; padding: 60px 0; border-bottom: 1px solid var(--border); }
+        h1 { color: var(--primary); font-size: 2.5rem; margin-bottom: 15px; }
+        
+        .knowledge-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 40px 0;
+        }
+
+        .info-card {
+            background: var(--surface);
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .info-card h3 { color: var(--secondary); margin-bottom: 15px; }
+
+        /* YAML DEMO */
+        .yaml-display {
+            background: #000;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            color: #d1d1d1;
+            font-size: 0.85rem;
+            border-left: 4px solid var(--primary);
+            margin-top: 15px;
+        }
+
+        /* PIPELINE NAV */
+        .pipeline-tracker {
+            display: flex;
+            background: var(--surface-light);
+            padding: 10px;
+            border-radius: 10px;
+            margin: 40px 0;
+            gap: 10px;
+            overflow-x: auto;
+        }
+
+        .step-btn {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            background: transparent;
+            color: var(--text-med);
+            border: none;
+            cursor: pointer;
+            border-radius: 8px;
+            font-weight: bold;
+            white-space: nowrap;
+            transition: 0.3s;
+        }
+
+        .step-btn.active { background: var(--primary); color: var(--bg); }
+        .step-btn.fail-btn { border: 1px solid var(--error); color: var(--error); }
+
+        /* STAGE LAYOUT */
+        .stage-pane { display: none; animation: fadeIn 0.5s ease forwards; }
+        .stage-pane.active { display: block; }
+
+        .main-display {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        /* SIMULATED APP */
+        .app-frame {
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            height: 450px;
+            display: flex;
+            flex-direction: column;
+            color: #333;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        .app-header { background: #f8f9fa; padding: 15px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; font-weight: bold; }
+        .app-body { flex: 1; padding: 20px; overflow-y: auto; transition: 0.5s; }
+        .app-footer { padding: 10px; background: #eee; text-align: center; font-size: 12px; }
+
+        /* APP STATES */
+        .state-building { filter: blur(4px) grayscale(1); pointer-events: none; }
+        .state-testing { position: relative; }
+        .state-testing::after { content: "TESTING IN PROGRESS..."; position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(187, 134, 252, 0.1); pointer-events: none; display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--primary); }
+        .state-production { border: 4px solid var(--secondary); }
+
+        /* BACKEND LOGS */
+        .terminal {
+            background: #000;
+            padding: 20px;
+            border-radius: 8px;
+            height: 450px;
+            overflow-y: auto;
+            font-family: 'Consolas', monospace;
+            font-size: 0.8rem;
+            color: #00ff41;
+            border: 1px solid var(--border);
+        }
+
+        .log-line { margin-bottom: 5px; border-bottom: 1px solid #111; padding-bottom: 2px; }
+        .log-error { color: var(--error); font-weight: bold; }
+        .log-cmd { color: var(--secondary); }
+
+        /* UI ELEMENTS INSIDE APP */
+        .coffee-card { border: 1px solid #eee; padding: 10px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;}
+        .btn-action { background: var(--primary); color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; }
+        .btn-checkout { background: var(--secondary); width: 100%; padding: 10px; border: none; color: #000; font-weight: bold; margin-top: 20px; cursor: pointer;}
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media (max-width: 900px) {
+            .main-display { grid-template-columns: 1fr; }
+            .pipeline-tracker { flex-wrap: wrap; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="hero-section">
+        <h1>Mastering the CI/CD Pipeline</h1>
+        <p>A complete technical guide for non-developers and manual testers.</p>
+    </div>
+
+    <div class="knowledge-grid">
+        <div class="info-card">
+            <h3>🤖 Jenkins & GitHub Actions</h3>
+            <p>These are the <b>Execution Engines</b>. When a developer pushes code, these tools wake up, rent a computer in the cloud, and follow the instructions in your YAML file.</p>
+            <p>• <b>Jenkins:</b> Self-hosted, very customizable.<br>• <b>GitHub Actions:</b> Built into GitHub, very easy to use.</p>
+        </div>
+        <div class="info-card">
+            <h3>📄 The YAML File (.yml)</h3>
+            <p>This is the <b>Contract</b>. It tells the Engine exactly what to do. Without this file, the pipeline has no brain.</p>
+            <div class="yaml-display">
+                jobs:<br>
+                &nbsp;&nbsp;build:<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;runs-on: ubuntu-latest<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;steps:<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- name: Compile Code<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;run: npm run build
+            </div>
+        </div>
+        <div class="info-card">
+            <h3>🚀 Manual vs. CI/CD</h3>
+            <p><b>Manual:</b> A person builds the app, runs tests by hand, and uploads files via FTP. Slow and full of human error.</p>
+            <p><b>CI/CD:</b> A robot does it in seconds. If a test fails, the robot <b>stops the release</b> automatically, protecting the customers.</p>
+        </div>
+    </div>
+
+    <h2 style="text-align: center; margin-bottom: 20px;">Interactive Pipeline Demo</h2>
+    
+    <div class="pipeline-tracker">
+        <button class="step-btn active" onclick="changeStage(1, this)">1. BUILD MODE</button>
+        <button class="step-btn" onclick="changeStage(2, this)">2. TEST MODE</button>
+        <button class="step-btn" onclick="changeStage(3, this)">3. RELEASE MODE</button>
+        <button class="step-btn" onclick="changeStage(4, this)">4. PRODUCTION</button>
+        <button class="step-btn fail-btn" onclick="triggerBug()">⚠️ SIMULATE BUG</button>
+    </div>
+
+    <div id="pane-1" class="stage-pane active">
+        <div class="main-display">
+            <div>
+                <h3>🏗️ Phase: Building the App</h3>
+                <p>The developer just clicked "Save". GitHub Actions is now downloading the code and turning it into a runnable website. Notice the app is blurry; it is currently <b>under construction</b>.</p>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li><b>Command:</b> <span class="log-cmd">npm install</span></li>
+                    <li><b>Process:</b> Gathering Home and Checkout page files.</li>
+                </ul>
+            </div>
+            <div class="visual-area">
+                <div class="app-frame state-building">
+                    <div class="app-header"><span>☕ CoffeeShop v2.0</span> <span>🛒 (0)</span></div>
+                    <div class="app-body">
+                        <h4>Our Menu</h4>
+                        <div class="coffee-card"><span>Espresso</span> <button class="btn-action">Add</button></div>
+                        <div class="coffee-card"><span>Latte</span> <button class="btn-action">Add</button></div>
+                    </div>
+                </div>
+                <div class="terminal" style="margin-top: 15px;">
+                    <div class="log-line">[BUILD] Node.js environment detected...</div>
+                    <div class="log-line">[BUILD] Fetching dependencies from package-lock.json...</div>
+                    <div class="log-line">[BUILD] 4,200 files downloaded into /node_modules</div>
+                    <div class="log-line">[BUILD] Bundling JavaScript and CSS...</div>
+                    <div class="log-line">[BUILD] Rendering 'Home' page... SUCCESS</div>
+                    <div class="log-line">[BUILD] Rendering 'Checkout' page... SUCCESS</div>
+                    <div class="log-line">[SUCCESS] Build completed in 42.1 seconds.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="pane-2" class="stage-pane">
+        <div class="main-display">
+            <div>
+                <h3>🧪 Phase: Automated Testing</h3>
+                <p>The app is built, but is it broken? We run "Scripts" that act like a human tester. They check the Home page and the Checkout page in milliseconds.</p>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li><b>Unit Test:</b> Does adding coffee increase the cart total?</li>
+                    <li><b>UI Test:</b> Does the 'Checkout' button exist?</li>
+                </ul>
+            </div>
+            <div class="visual-area">
+                <div class="app-frame state-testing" id="test-app-frame">
+                    <div class="app-header"><span>☕ CoffeeShop v2.0</span> <span>🛒 (1)</span></div>
+                    <div class="app-body">
+                        <h4>Testing Checkout Page...</h4>
+                        <div style="background: #f1f1f1; padding: 15px; border-radius: 8px;">
+                            <p>Item: 1x Espresso - $3.50</p>
+                            <p>Total: $3.50</p>
+                            <button class="btn-checkout">PAY NOW</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="terminal" style="margin-top: 15px;">
+                    <div class="log-line">[TEST] Starting Automated Test Suite...</div>
+                    <div class="log-line">[TEST] unit_test: cart_logic.js ... <span style="color:var(--secondary)">PASS</span></div>
+                    <div class="log-line">[TEST] ui_test: home_load_speed ... <span style="color:var(--secondary)">PASS</span></div>
+                    <div class="log-line">[TEST] ui_test: checkout_button_click ... <span style="color:var(--secondary)">PASS</span></div>
+                    <div class="log-line">[SUCCESS] 158 Tests Passed. Coverage: 98%.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="pane-3" class="stage-pane">
+        <div class="main-display">
+            <div>
+                <h3>📦 Phase: Creating the Release</h3>
+                <p>The tests passed! Now the robot puts the website into a "Shipping Container" (Docker). This ensures the website works the same on the server as it did on the developer's laptop.</p>
+                <div class="yaml-display">
+                    # Release Instruction<br>
+                    docker build -t coffee-app:v2.0 .<br>
+                    docker push coffee-registry/v2.0
+                </div>
+            </div>
+            <div class="visual-area">
+                <div style="text-align: center; padding: 40px; background: var(--surface); border-radius: 12px; border: 2px dashed var(--primary);">
+                    <div style="font-size: 60px;">📦</div>
+                    <p style="color: var(--primary); font-weight: bold; margin-top: 10px;">Release Artifact: v2.0.421</p>
+                    <p>Status: Ready for Deployment</p>
+                </div>
+                <div class="terminal" style="margin-top: 15px;">
+                    <div class="log-line">[RELEASE] Packaging application into Docker image...</div>
+                    <div class="log-line">[RELEASE] Compressing assets (Images/JS/CSS)...</div>
+                    <div class="log-line">[RELEASE] Image ID: sha256:772ab12... created.</div>
+                    <div class="log-line">[RELEASE] Uploading to AWS Elastic Container Registry...</div>
+                    <div class="log-line">[SUCCESS] Release v2.0 is staged and ready.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="pane-4" class="stage-pane">
+        <div class="main-display">
+            <div>
+                <h3>🚀 Phase: Production (Live)</h3>
+                <p>The app is now live for real customers. Both the <b>Home Page</b> and <b>Checkout Page</b> are functional and accessible on the internet.</p>
+                <p style="color: var(--secondary); margin-top: 10px;"><b>Total Pipeline Time: 2 mins 14 secs.</b></p>
+            </div>
+            <div class="visual-area">
+                <div class="app-frame state-production" id="prod-app">
+                    <div class="app-header" style="background: var(--secondary); color: #000;"><span>☕ CoffeeShop LIVE</span> <span>🛒 (0)</span></div>
+                    <div class="app-body" id="prod-body">
+                        <h4>Welcome to our Store!</h4>
+                        <div class="coffee-card"><span>Espresso</span> <button class="btn-action" onclick="showCheckout()">Add</button></div>
+                        <div class="coffee-card"><span>Latte</span> <button class="btn-action" onclick="showCheckout()">Add</button></div>
+                    </div>
+                </div>
+                <div class="terminal" style="margin-top: 15px;">
+                    <div class="log-line">[DEPLOY] Connecting to Live Cloud Cluster...</div>
+                    <div class="log-line">[DEPLOY] Rolling out v2.0 (Zero Downtime)...</div>
+                    <div class="log-line">[DEPLOY] Old servers shutting down...</div>
+                    <div class="log-line">[MONITOR] 1,240 active users connected.</div>
+                    <div class="log-line" style="color: var(--secondary)">[STATUS] SERVICE HEALTHY: 100%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    function changeStage(num, btn) {
+        // Reset Nav
+        document.querySelectorAll('.step-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Reset Panes
+        document.querySelectorAll('.stage-pane').forEach(p => p.classList.remove('active'));
+        document.getElementById('pane-' + num).classList.add('active');
+    }
+
+    function showCheckout() {
+        const body = document.getElementById('prod-body');
+        body.innerHTML = `
+            <h4>Checkout Page</h4>
+            <div style="border: 1px solid #eee; padding: 15px; border-radius: 8px;">
+                <p>1x Espresso - $3.50</p>
+                <hr style="margin: 10px 0;">
+                <p><b>Total: $3.50</b></p>
+                <button class="btn-checkout" onclick="alert('Order Successful!')">PAY NOW</button>
+            </div>
+            <p style="text-align:center; font-size:12px; margin-top:10px; cursor:pointer;" onclick="location.reload()">Back to Menu</p>
+        `;
+    }
+
+    function triggerBug() {
+        // Change to test stage
+        changeStage(2, document.querySelectorAll('.step-btn')[1]);
+        
+        // Show Bug UI
+        const app = document.getElementById('test-app-frame');
+        app.innerHTML = `
+            <div class="app-header" style="background: var(--error); color: #fff;"><span>⚠️ CRITICAL BUG FOUND</span></div>
+            <div class="app-body" style="background: #ffebee;">
+                <h2 style="color: #c62828;">Error 500</h2>
+                <p>The "Pay Now" button is missing! The code change broke the checkout page.</p>
+            </div>
+        `;
+
+        // Update Logs
+        const terminal = document.querySelectorAll('.terminal')[1];
+        terminal.innerHTML += `
+            <div class="log-line log-error">[ERROR] ui_test: checkout_button_click ... FAILED</div>
+            <div class="log-line log-error">[PIPELINE] ABORTING RELEASE...</div>
+            <div class="log-line log-error">[PIPELINE] Notifying developer via Slack...</div>
+            <div class="log-line">[INFO] Production was NOT updated. Customers are still safe.</div>
+        `;
+    }
+</script>
+
+</body>
+</html>
